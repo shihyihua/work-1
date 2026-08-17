@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>外展人員轄區查詢</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(145deg, #FDEEE6 0%, #FDF8F4 30%, #EAF8F8 70%, #C8EDEF 100%);
+    padding: 32px 24px 60px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(120deg, #E8855A 0%, #F4B896 40%, #7DD4D8 100%);
+    border-radius: 16px;
+    padding: 28px 32px 22px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 20px rgba(232,133,90,0.22);
+  }
+  .header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
+  .header p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.88);
+  }
+
+  /* ── Search ── */
+  .search-wrap {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .search-wrap input {
+    width: 300px;
+    font-size: 16px;
+    font-family: inherit;
+    padding: 10px 16px;
+    border: 1.5px solid #7DD4D8;
+    border-radius: 10px;
+    outline: none;
+    background: rgba(255,255,255,0.92);
+    color: #2a4a50;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-wrap input:focus { border-color: #5BBFC4; box-shadow: 0 0 0 3px rgba(91,191,196,0.15); }
+  .count-badge {
+    background: #FEF0E6;
+    color: #C05A20;
+    border: 1px solid #F4B896;
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ── District buttons ── */
+  .section-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #3A6E72;
+    margin-bottom: 10px;
+  }
+  .district-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .dist-btn {
+    background: rgba(255,255,255,0.85);
+    border: 1.5px solid #F4B896;
+    border-radius: 10px;
+    padding: 9px 20px;
+    font-size: 17px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #C05A20;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+    backdrop-filter: blur(4px);
+  }
+  .dist-btn:hover { background: #FEF0E6; box-shadow: 0 2px 8px rgba(232,133,90,0.18); }
+  .dist-btn.active {
+    background: linear-gradient(120deg, #5BBFC4, #7DD4D8);
+    color: #fff;
+    border-color: #4AADB2;
+    box-shadow: 0 2px 10px rgba(91,191,196,0.3);
+  }
+
+  /* ── Results panel ── */
+  .divider { border: none; border-top: 1.5px solid #C0E8EB; margin: 0 0 20px; }
+  .panel {
+    background: rgba(255,255,255,0.70);
+    border-radius: 14px;
+    padding: 20px 22px;
+    min-height: 80px;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(125,212,216,0.3);
+    box-shadow: 0 2px 16px rgba(91,191,196,0.10);
+  }
+
+  .hint { color: #5a8c8e; font-size: 15px; }
+  .no-result { color: #b04010; font-size: 15px; }
+
+  /* District view */
+  .person-section { margin-bottom: 20px; }
+  .person-header {
+    display: inline-block;
+    background: linear-gradient(90deg, #7DD4D8, #A8E0E3);
+    color: #1a4a4e;
+    border-radius: 8px;
+    padding: 6px 18px;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 6px rgba(91,191,196,0.2);
+  }
+  .village-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .v-chip {
+    background: rgba(255,255,255,0.88);
+    border: 1px solid #A8E0E3;
+    border-radius: 8px;
+    padding: 5px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #2a4a50;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .v-chip:hover { background: #FEF0E6; color: #C05A20; border-color: #F4B896; }
+
+  /* Search result cards */
+  .result-card {
+    background: rgba(255,255,255,0.88);
+    border: 1px solid #A8E0E3;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 6px rgba(91,191,196,0.10);
+  }
+  .result-card:last-child { margin-bottom: 0; }
+  .result-village {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a4a4e;
+    margin-bottom: 6px;
+  }
+  .result-row {
+    font-size: 14px;
+    color: #4a7a7e;
+    margin: 3px 0;
+  }
+  .result-row strong { color: #2a5a5e; }
+  .tag {
+    display: inline-block;
+    background: #FEF0E6;
+    color: #C05A20;
+    border-radius: 6px;
+    padding: 1px 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>外展人員轄區查詢</h1>
+  <p>資料更新日期：1150810　共 230 筆村里</p>
+</div>
+
+<div class="search-wrap">
+  <input type="text" id="searchInput" placeholder="輸入村里名稱搜尋…" oninput="onSearch()" />
+  <span class="count-badge" id="countBadge">共 230 筆</span>
+</div>
+
+<p class="section-label">依鄉鎮市快速查詢</p>
+<div class="district-btns" id="distBtns"></div>
+
+<hr class="divider">
+<div class="panel">
+  <div id="results"><p class="hint">輸入村里名稱，或點選上方鄉鎮市按鈕查詢</p></div>
+</div>
+
+<script>
+const data = [{"village":"和西里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"和北里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"和南里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"仁愛里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"面前里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"四張里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"竹營里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"頭前里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"月眉里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"好修里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"塗厝里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"嘉寶里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"地潭里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"湖內里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"山犁里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"和東里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"源埤里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"大霞里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"雅溝里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"鎮平里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"南佃里","person":"廖慶璇 (何晨宇)","district":"和美鎮"},{"village":"大有里","person":"福興台","district":"鹿港鎮"},{"village":"中興里","person":"福興台","district":"鹿港鎮"},{"village":"玉順里","person":"福興台","district":"鹿港鎮"},{"village":"東崎里","person":"福興台","district":"鹿港鎮"},{"village":"洋厝里","person":"福興台","district":"鹿港鎮"},{"village":"山崙里","person":"福興台","district":"鹿港鎮"},{"village":"永安里","person":"福興台","district":"鹿港鎮"},{"village":"東石里","person":"福興台","district":"鹿港鎮"},{"village":"長興里","person":"福興台","district":"鹿港鎮"},{"village":"洛津里","person":"福興台","district":"鹿港鎮"},{"village":"埔崙里","person":"福興台","district":"鹿港鎮"},{"village":"海埔里","person":"福興台","district":"鹿港鎮"},{"village":"郭厝里","person":"福興台","district":"鹿港鎮"},{"village":"頂番里","person":"福興台","district":"鹿港鎮"},{"village":"菜園里","person":"福興台","district":"鹿港鎮"},{"village":"泰興里","person":"福興台","district":"鹿港鎮"},{"village":"草中里","person":"福興台","district":"鹿港鎮"},{"village":"頂厝里","person":"福興台","district":"鹿港鎮"},{"village":"景福里","person":"福興台","district":"鹿港鎮"},{"village":"街尾里","person":"福興台","district":"鹿港鎮"},{"village":"詔安里","person":"福興台","district":"鹿港鎮"},{"village":"新宮里","person":"福興台","district":"鹿港鎮"},{"village":"廖厝里","person":"福興台","district":"鹿港鎮"},{"village":"頭南里","person":"福興台","district":"鹿港鎮"},{"village":"龍山里","person":"福興台","district":"鹿港鎮"},{"village":"順興里","person":"福興台","district":"鹿港鎮"},{"village":"溝墘里","person":"福興台","district":"鹿港鎮"},{"village":"興化里","person":"福興台","district":"鹿港鎮"},{"village":"頭崙里","person":"福興台","district":"鹿港鎮"},{"village":"鹿和里","person":"福興台","district":"鹿港鎮"},{"village":"鹿東里","person":"福興台","district":"鹿港鎮"},{"village":"鹿港彰濱工業區","person":"福興台","district":"鹿港鎮"},{"village":"福興村","person":"福興台","district":"福興鄉"},{"village":"福南村","person":"福興台","district":"福興鄉"},{"village":"秀厝村","person":"福興台","district":"福興鄉"},{"village":"二港村","person":"福興台","district":"福興鄉"},{"village":"福寶村","person":"福興台","district":"福興鄉"},{"village":"頂粘村","person":"福興台","district":"福興鄉"},{"village":"廈粘村","person":"福興台","district":"福興鄉"},{"village":"麥厝村","person":"福興台","district":"福興鄉"},{"village":"三和村","person":"福興台","district":"福興鄉"},{"village":"饒平村","person":"福興台","district":"福興鄉"},{"village":"橋頭村","person":"福興台","district":"福興鄉"},{"village":"番婆村","person":"福興台","district":"福興鄉"},{"village":"大崙村","person":"福興台","district":"福興鄉"},{"village":"外埔村","person":"福興台","district":"福興鄉"},{"village":"番社村","person":"福興台","district":"福興鄉"},{"village":"社尾村","person":"福興台","district":"福興鄉"},{"village":"西勢村","person":"福興台","district":"福興鄉"},{"village":"同安村","person":"福興台","district":"福興鄉"},{"village":"新港村","person":"線西台","district":"伸港鄉"},{"village":"泉州村","person":"線西台","district":"伸港鄉"},{"village":"泉厝村","person":"線西台","district":"伸港鄉"},{"village":"曾家村","person":"線西台","district":"伸港鄉"},{"village":"蚵寮村","person":"線西台","district":"伸港鄉"},{"village":"什股村","person":"線西台","district":"伸港鄉"},{"village":"海尾村","person":"線西台","district":"伸港鄉"},{"village":"全興村","person":"線西台","district":"伸港鄉"},{"village":"大同村","person":"線西台","district":"伸港鄉"},{"village":"定興村","person":"線西台","district":"伸港鄉"},{"village":"七嘉村","person":"線西台","district":"伸港鄉"},{"village":"汴頭村","person":"線西台","district":"伸港鄉"},{"village":"埤墘村","person":"線西台","district":"伸港鄉"},{"village":"溪底村","person":"線西台","district":"伸港鄉"},{"village":"全興工業區","person":"線西台","district":"伸港鄉"},{"village":"德興村","person":"線西台","district":"線西鄉"},{"village":"頂庄村","person":"線西台","district":"線西鄉"},{"village":"線西村","person":"線西台","district":"線西鄉"},{"village":"寓埔村","person":"線西台","district":"線西鄉"},{"village":"溝內村","person":"線西台","district":"線西鄉"},{"village":"塭仔村","person":"線西台","district":"線西鄉"},{"village":"頂犁村","person":"線西台","district":"線西鄉"},{"village":"下犁村","person":"線西台","district":"線西鄉"},{"village":"秀水村","person":"秀水台","district":"秀水鄉"},{"village":"安溪村","person":"秀水台","district":"秀水鄉"},{"village":"莊雅村","person":"秀水台","district":"秀水鄉"},{"village":"陝西村","person":"秀水台","district":"秀水鄉"},{"village":"金興村","person":"秀水台","district":"秀水鄉"},{"village":"安東村","person":"秀水台","district":"秀水鄉"},{"village":"鶴嗚村","person":"秀水台","district":"秀水鄉"},{"village":"馬興村","person":"秀水台","district":"秀水鄉"},{"village":"義興村","person":"秀水台","district":"秀水鄉"},{"village":"福安村","person":"秀水台","district":"秀水鄉"},{"village":"埔崙村","person":"秀水台","district":"秀水鄉"},{"village":"曾厝村","person":"秀水台","district":"秀水鄉"},{"village":"金陵村","person":"秀水台","district":"秀水鄉"},{"village":"下崙村","person":"秀水台","district":"秀水鄉"},{"village":"三汴村","person":"秀水台","district":"福興鄉"},{"village":"萬豐村","person":"秀水台","district":"福興鄉"},{"village":"外中村","person":"秀水台","district":"福興鄉"},{"village":"元中村","person":"秀水台","district":"福興鄉"},{"village":"福興工業區","person":"秀水台","district":"福興鄉"},{"village":"南安里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"莿桐里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"東芳里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"平和里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"向陽里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"南美里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"南興里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"延和里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"延平里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"桃源里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"介壽里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"建寶里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"華陽里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"卦山里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"東興里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"光南里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"華北里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"成功里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"南瑤里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"彰安里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"崙平里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"福安里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"永生里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"大同里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"西興里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"西安里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"民權里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"富貴里","person":"蘇雅婷 (陳宜伶)","district":"彰化市"},{"village":"中央里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"萬壽里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"長樂里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"永福里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"光華里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"中山里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"光復里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"信義里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"龍山里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"中正里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"民生里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"興北里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"文化里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"萬安里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"陽明里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"和調里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"復興里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"中庄里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"福山里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"安溪里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"國聖里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"竹中里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"大竹里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"香山里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"三村里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"牛埔里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"台鳳里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"田中里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"寶廍里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"下廍里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"阿夷里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"古夷里","person":"賴芊秀 (陳宜伶)","district":"彰化市"},{"village":"詔安里","person":"柯美夙 (陳宜伶)","district":"和美鎮"},{"village":"嘉犁里","person":"柯美夙 (陳宜伶)","district":"和美鎮"},{"village":"柑井里","person":"柯美夙 (陳宜伶)","district":"和美鎮"},{"village":"鐵山里","person":"柯美夙 (陳宜伶)","district":"和美鎮"},{"village":"新庄里","person":"柯美夙 (陳宜伶)","district":"和美鎮"},{"village":"犁盛里","person":"柯美夙 (陳宜伶)","district":"和美鎮"},{"village":"糖友里","person":"柯美夙 (陳宜伶)","district":"和美鎮"},{"village":"中寮里","person":"柯美夙 (陳宜伶)","district":"和美鎮"},{"village":"中圍里","person":"柯美夙 (陳宜伶)","district":"和美鎮"},{"village":"竹園里","person":"柯美夙 (陳宜伶)","district":"和美鎮"},{"village":"還社里","person":"柯美夙 (陳宜伶)","district":"和美鎮"},{"village":"磚磘里","person":"柯美夙 (陳宜伶)","district":"彰化市"},{"village":"西勢里","person":"柯美夙 (陳宜伶)","district":"彰化市"},{"village":"五權里","person":"柯美夙 (陳宜伶)","district":"彰化市"},{"village":"忠權里","person":"柯美夙 (陳宜伶)","district":"彰化市"},{"village":"忠孝里","person":"柯美夙 (陳宜伶)","district":"彰化市"},{"village":"新華里","person":"柯美夙 (陳宜伶)","district":"彰化市"},{"village":"新興里","person":"柯美夙 (陳宜伶)","district":"彰化市"},{"village":"茄南里","person":"柯美夙 (陳宜伶)","district":"彰化市"},{"village":"茄苳里","person":"柯美夙 (陳宜伶)","district":"彰化市"},{"village":"竹巷里","person":"芬園台","district":"彰化市"},{"village":"快官里","person":"芬園台","district":"彰化市"},{"village":"石牌里","person":"芬園台","district":"彰化市"},{"village":"福田里","person":"芬園台","district":"彰化市"},{"village":"社口村","person":"芬園台","district":"芬園鄉"},{"village":"舊社村","person":"芬園台","district":"芬園鄉"},{"village":"大埔村","person":"芬園台","district":"芬園鄉"},{"village":"竹林村","person":"芬園台","district":"芬園鄉"},{"village":"楓坑村","person":"芬園台","district":"芬園鄉"},{"village":"茄荖村","person":"芬園台","district":"芬園鄉"},{"village":"嘉興村","person":"芬園台","district":"芬園鄉"},{"village":"芬園村","person":"芬園台","district":"芬園鄉"},{"village":"進芬村","person":"芬園台","district":"芬園鄉"},{"village":"縣庄村","person":"芬園台","district":"芬園鄉"},{"village":"圳墘村","person":"芬園台","district":"芬園鄉"},{"village":"溪頭村","person":"芬園台","district":"芬園鄉"},{"village":"同安村","person":"芬園台","district":"芬園鄉"},{"village":"中崙村","person":"芬園台","district":"芬園鄉"},{"village":"大竹村","person":"芬園台","district":"芬園鄉"},{"village":"花壇村","person":"花壇台","district":"花壇鄉"},{"village":"金墩村","person":"花壇台","district":"花壇鄉"},{"village":"中庄村","person":"花壇台","district":"花壇鄉"},{"village":"劉厝村","person":"花壇台","district":"花壇鄉"},{"village":"崙雅村","person":"花壇台","district":"花壇鄉"},{"village":"南口村","person":"花壇台","district":"花壇鄉"},{"village":"中口村","person":"花壇台","district":"花壇鄉"},{"village":"北口村","person":"花壇台","district":"花壇鄉"},{"village":"白沙村","person":"花壇台","district":"花壇鄉"},{"village":"文德村","person":"花壇台","district":"花壇鄉"},{"village":"岩竹村","person":"花壇台","district":"花壇鄉"},{"village":"長沙村","person":"花壇台","district":"花壇鄉"},{"village":"橋頭村","person":"花壇台","district":"花壇鄉"},{"village":"灣東村","person":"花壇台","district":"花壇鄉"},{"village":"灣雅村","person":"花壇台","district":"花壇鄉"},{"village":"三春村","person":"花壇台","district":"花壇鄉"},{"village":"永春村","person":"花壇台","district":"花壇鄉"},{"village":"長春村","person":"花壇台","district":"花壇鄉"}];
+
+const districtMap = {};
+data.forEach(d => {
+  if (!districtMap[d.district]) districtMap[d.district] = {};
+  if (!districtMap[d.district][d.person]) districtMap[d.district][d.person] = [];
+  districtMap[d.district][d.person].push(d.village);
+});
+
+const districtOrder = ["彰化市","和美鎮","鹿港鎮","福興鄉","伸港鄉","線西鄉","秀水鄉","芬園鄉","花壇鄉"];
+let activeDistrict = null;
+
+const btnsEl = document.getElementById('distBtns');
+districtOrder.forEach(d => {
+  const b = document.createElement('button');
+  b.className = 'dist-btn';
+  b.textContent = d;
+  b.onclick = () => selectDistrict(d, b);
+  btnsEl.appendChild(b);
+});
+
+function selectDistrict(d, btn) {
+  if (activeDistrict === d) {
+    activeDistrict = null;
+    btn.classList.remove('active');
+    document.getElementById('searchInput').value = '';
+    document.getElementById('results').innerHTML = '<p class="hint">輸入村里名稱，或點選上方鄉鎮市按鈕查詢</p>';
+    document.getElementById('countBadge').textContent = '共 230 筆';
+    return;
+  }
+  activeDistrict = d;
+  document.querySelectorAll('.dist-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('searchInput').value = '';
+  showDistrict(d);
+}
+
+function showDistrict(d) {
+  const persons = districtMap[d];
+  if (!persons) return;
+  const total = Object.values(persons).flat().length;
+  document.getElementById('countBadge').textContent = d + '　' + total + ' 筆';
+  let html = '';
+  Object.entries(persons).forEach(([person, villages]) => {
+    const chips = villages.map(v => '<span class="v-chip" onclick="searchVillage(\'' + v + '\')">' + v + '</span>').join('');
+    html += '<div class="person-section"><div class="person-header">' + person + '</div><div class="village-grid">' + chips + '</div></div>';
+  });
+  document.getElementById('results').innerHTML = html;
+}
+
+function searchVillage(v) {
+  document.getElementById('searchInput').value = v;
+  document.querySelectorAll('.dist-btn').forEach(b => b.classList.remove('active'));
+  activeDistrict = null;
+  onSearch();
+}
+
+function onSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) {
+    document.getElementById('results').innerHTML = '<p class="hint">輸入村里名稱，或點選上方鄉鎮市按鈕查詢</p>';
+    document.getElementById('countBadge').textContent = '共 230 筆';
+    document.querySelectorAll('.dist-btn').forEach(b => b.classList.remove('active'));
+    activeDistrict = null;
+    return;
+  }
+  document.querySelectorAll('.dist-btn').forEach(b => b.classList.remove('active'));
+  activeDistrict = null;
+  const matches = data.filter(d => d.village.includes(q));
+  document.getElementById('countBadge').textContent = '找到 ' + matches.length + ' 筆';
+  if (matches.length === 0) {
+    document.getElementById('results').innerHTML = '<p class="no-result">找不到符合的村里，請確認名稱是否正確。</p>';
+    return;
+  }
+  document.getElementById('results').innerHTML = matches.map(m =>
+    '<div class="result-card">' +
+    '<div class="result-village">' + m.village + '</div>' +
+    '<div class="result-row">承辦人員：<strong>' + m.person + '</strong></div>' +
+    '<div class="result-row">轄區：<span class="tag">' + m.district + '</span></div>' +
+    '</div>'
+  ).join('');
+}
+</script>
+</body>
+</html>
